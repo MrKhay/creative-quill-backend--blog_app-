@@ -1,0 +1,25 @@
+basePath: /
+host: localhost:3000
+info:
+  contact:
+    name: KhAy
+  description: "The mad backend \U0001F525\U0001F525\U0001F525\U0001F525\U0001F525"
+  license:
+    name: MIT
+  title: Creative Insider Backend
+  version: "0.1"
+paths:
+  /health:
+    get:
+      consumes:
+      - '*/*'
+      description: get the status of server.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      summary: Show the status of server.
+      tags:
+      - health
+swagger: "2.0"
