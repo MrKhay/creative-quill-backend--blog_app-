@@ -6,41 +6,47 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/mrkhay/creative-insider-backend/config"
-	"github.com/mrkhay/creative-insider-backend/database"
-	"github.com/mrkhay/creative-insider-backend/handlers"
-	"github.com/mrkhay/creative-insider-backend/middleware"
-	"github.com/mrkhay/creative-insider-backend/utility"
+	"github.com/mrkhay/creative-quill-backend/config"
+	"github.com/mrkhay/creative-quill-backend/database"
+	"github.com/mrkhay/creative-quill-backend/handlers"
+	"github.com/mrkhay/creative-quill-backend/middleware"
+	t "github.com/mrkhay/creative-quill-backend/models"
+	"github.com/mrkhay/creative-quill-backend/router"
+	"github.com/mrkhay/creative-quill-backend/utility"
 )
 
-func SetupAndRun() error {
+func SetupAndRun() *t.ApiError {
 
 	// load env
 	err := config.LoadENV()
 	if err != nil {
-		return err
+		fmt.Println("1")
+		return t.NewError(err, http.StatusConflict)
 	}
 
 	// start database
-	db, err := database.StartMongoDB()
-	if err != nil {
-		return err
+	db, error := database.NewPostgresStorage()
+	if error != nil {
+		fmt.Println(err.Error())
+		return error
 	}
 
-	defer database.CloseMongoDB()
+	// create tables
+	db.Init()
 
 	app := mux.NewRouter()
 
 	// attach middleware
 	app.Use(middleware.LoggerMiddleware)
 
+	// setup logger
 	utility.SetupLogger()
 
-	server := handlers.NewApiStorage(db)
-	// server := handlers.NewApiStorage(nil)
+	// setup handlers
+	handler := handlers.SetUpHandlers(db)
 
 	// setup routes
-	server.SetupRoutes(app)
+	router.SetupRoutes(app, *handler)
 
 	// setup swagger doc
 	config.AddSwaggerRoutes(app)
@@ -49,6 +55,7 @@ func SetupAndRun() error {
 	port := os.Getenv("PORT")
 
 	fmt.Println("Searving on port: ", port)
+
 	http.ListenAndServe(fmt.Sprintf(":%s", port), app)
 
 	return nil

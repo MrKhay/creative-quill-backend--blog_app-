@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/mrkhay/creative-insider-backend/app"
+	"github.com/mrkhay/creative-quill-backend/app"
 )
 
-// @title Creative Insider Backend
+// @title Creatives Quill Backend
 // @version 0.1
 // @description The mad backend 🔥🔥🔥🔥🔥
 // @contact.name KhAy
 // @license.name MIT
-// @host localhost:3000
+// @host localhost:3400
 // @BasePath /
 func main() {
 	// project init

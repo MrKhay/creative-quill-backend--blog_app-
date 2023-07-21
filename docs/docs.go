@@ -50,7 +50,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:3000",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Creative Insider Backend",
+	Title:            "Creatives Quill Backend",
 	Description:      "The mad backend 🔥🔥🔥🔥🔥",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

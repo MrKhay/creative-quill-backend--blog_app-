@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/mrkhay/creative-insider-backend/utility"
+	"github.com/mrkhay/creative-quill-backend/database"
+	t "github.com/mrkhay/creative-quill-backend/models"
+	"github.com/mrkhay/creative-quill-backend/utility"
 )
 
-// CreateAccount returns account with token.
+// Signup returns account with token.
 //
-// swagger:route POST /account account CreateAccount
+// swagger:route POST /signup account Signup
 //
 // Returns account with token..
 //
@@ -18,8 +21,38 @@ import (
 //
 // 500:
 // 300
-func (s *APISTORAGE) Happy(w http.ResponseWriter, r *http.Request) error {
 
-	utility.WriteJson(w, http.StatusOK, "Happy")
+type Handlers struct {
+	db database.Storage
+}
+
+func SetUpHandlers(s database.Storage) *Handlers {
+
+	return &Handlers{
+		db: s,
+	}
+}
+
+func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) *t.ApiError {
+
+	acc := new(t.Account)
+
+	err := json.NewDecoder(r.Body).Decode(acc)
+	if err != nil {
+		return t.NewError(err, http.StatusConflict)
+	}
+
+	acc, error := t.NewAccount(acc.Firstname, acc.Lastname, acc.Email, acc.Password)
+
+	if error != nil {
+		return error
+	}
+	error = h.db.Signup(acc)
+
+	if error != nil {
+		return error
+	}
+
+	utility.WriteJson(w, http.StatusOK, acc)
 	return nil
 }

@@ -3,7 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/mrkhay/creative-insider-backend/utility"
+	t "github.com/mrkhay/creative-quill-backend/models"
+	"github.com/mrkhay/creative-quill-backend/utility"
 )
 
 // @Summary Show the status of server.
@@ -13,7 +14,7 @@ import (
 // @Produce plain
 // @Success 200 "OK"
 // @Router /health [get]
-func HealthCheckHandler(w http.ResponseWriter, r *http.Request) error {
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) *t.ApiError {
 
 	return utility.WriteJson(w, http.StatusOK, "Server is healthy")
 

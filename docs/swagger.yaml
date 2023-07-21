@@ -6,7 +6,7 @@ info:
   description: "The mad backend \U0001F525\U0001F525\U0001F525\U0001F525\U0001F525"
   license:
     name: MIT
-  title: Creative Insider Backend
+  title: Creatives Quill Backend
   version: "0.1"
 paths:
   /health:

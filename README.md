@@ -1,6 +1,6 @@
-# Creative Insider Backend
+# Creatives Quill Backend
 
-Backend project for [creativeinsider.app](https://creativeinsider.app)
+Backend project for [creativesquill.app](https://creativeinsider.app)
 
 ## Stack
 

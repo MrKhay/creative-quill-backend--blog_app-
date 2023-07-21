@@ -2,7 +2,8 @@ package config
 
 import (
 	"github.com/gorilla/mux"
-	_ "github.com/mrkhay/creative-insider-backend/docs"
+	_ "github.com/mrkhay/creative-quill-backend/docs"
+
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
