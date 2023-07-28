@@ -40,6 +40,26 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/signin": {
+            "post": {
+                "description": "to sign in user.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Signin user.",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     }
 }`
@@ -47,7 +67,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
-	Host:             "localhost:3000",
+	Host:             "localhost:3400",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Creatives Quill Backend",

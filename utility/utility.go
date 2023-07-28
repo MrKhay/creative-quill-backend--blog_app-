@@ -2,22 +2,34 @@ package utility
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/golang-jwt/jwt"
-	t "github.com/mrkhay/creative-quill-backend/models"
 )
 
-func WriteJson(w http.ResponseWriter, status int, v any) *t.ApiError {
+type ApiError struct {
+	Error  error
+	Status int
+}
+
+func NewError(error error, code int) *ApiError {
+	return &ApiError{
+		Error:  error,
+		Status: code,
+	}
+}
+
+func WriteJson(w http.ResponseWriter, status int, v any) *ApiError {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	err := json.NewEncoder(w).Encode(v)
 
 	if err != nil {
-		return &t.ApiError{
+		return &ApiError{
 			Error:  err,
 			Status: http.StatusUnprocessableEntity,
 		}
@@ -39,13 +51,12 @@ func SetupLogger() {
 	log.SetFlags(0)
 }
 
-func CreateJWT(account *t.Account) (string, *t.ApiError) {
+func CreateJWT(email *string) (string, *ApiError) {
 	secreat := os.Getenv("JWT_SECRET")
 	// create claims
-
 	claims := &jwt.MapClaims{
 		"expiresAt": 15000,
-		"email":     account.Email,
+		"email":     email,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -53,9 +64,23 @@ func CreateJWT(account *t.Account) (string, *t.ApiError) {
 	res, err := token.SignedString([]byte(secreat))
 
 	if err != nil {
-		return "", t.NewError(err, http.StatusBadGateway)
+		return "", NewError(err, http.StatusBadGateway)
 	}
 
 	return res, nil
+
+}
+
+func ValidateJWT(tokenString string) (*jwt.Token, error) {
+	secreat := os.Getenv("JWT_SECRET")
+
+	return jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+
+		return []byte(secreat), nil
+	})
 
 }

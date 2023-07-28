@@ -1,5 +1,5 @@
 basePath: /
-host: localhost:3000
+host: localhost:3400
 info:
   contact:
     name: KhAy
@@ -20,6 +20,19 @@ paths:
         "200":
           description: OK
       summary: Show the status of server.
+      tags:
+      - health
+  /signin:
+    post:
+      consumes:
+      - '*/*'
+      description: to sign in user.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      summary: Signin user.
       tags:
       - health
 swagger: "2.0"

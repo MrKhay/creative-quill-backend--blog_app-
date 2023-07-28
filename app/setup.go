@@ -10,18 +10,17 @@ import (
 	"github.com/mrkhay/creative-quill-backend/database"
 	"github.com/mrkhay/creative-quill-backend/handlers"
 	"github.com/mrkhay/creative-quill-backend/middleware"
-	t "github.com/mrkhay/creative-quill-backend/models"
 	"github.com/mrkhay/creative-quill-backend/router"
-	"github.com/mrkhay/creative-quill-backend/utility"
+	u "github.com/mrkhay/creative-quill-backend/utility"
 )
 
-func SetupAndRun() *t.ApiError {
+func SetupAndRun() *u.ApiError {
 
 	// load env
 	err := config.LoadENV()
 	if err != nil {
 		fmt.Println("1")
-		return t.NewError(err, http.StatusConflict)
+		return u.NewError(err, http.StatusConflict)
 	}
 
 	// start database
@@ -40,7 +39,7 @@ func SetupAndRun() *t.ApiError {
 	app.Use(middleware.LoggerMiddleware)
 
 	// setup logger
-	utility.SetupLogger()
+	u.SetupLogger()
 
 	// setup handlers
 	handler := handlers.SetUpHandlers(db)

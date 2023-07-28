@@ -11,7 +11,7 @@
         },
         "version": "0.1"
     },
-    "host": "localhost:3000",
+    "host": "localhost:3400",
     "basePath": "/",
     "paths": {
         "/health": {
@@ -27,6 +27,26 @@
                     "health"
                 ],
                 "summary": "Show the status of server.",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/signin": {
+            "post": {
+                "description": "to sign in user.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Signin user.",
                 "responses": {
                     "200": {
                         "description": "OK"
