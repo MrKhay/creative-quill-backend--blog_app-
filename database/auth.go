@@ -92,7 +92,7 @@ func (s *PostgresStorage) GetAccount(req *t.SigninRequest) (*t.Account, *u.ApiEr
 
 	// get email and password
 	row, err := s.db.Query(
-		`SELECT * FROM accounts_view WHERE email = $1`, req.Email)
+		`SELECT * FROM accounts WHERE email = $1`, req.Email)
 
 	if err != nil {
 		return nil, u.NewError(err, http.StatusBadGateway)
@@ -138,7 +138,7 @@ func (s *PostgresStorage) AltGetAccount(req *t.AltSigninRequest) (*t.Account, *u
 
 	// get email and password
 	row, err := s.db.Query(
-		`SELECT * FROM accounts_view WHERE email = $1`, req.Email)
+		`SELECT * FROM accounts WHERE email = $1`, req.Email)
 
 	if err != nil {
 		return nil, u.NewError(err, http.StatusBadGateway)

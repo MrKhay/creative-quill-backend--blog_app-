@@ -10,12 +10,13 @@ import (
 func (s *PostgresStorage) FollowUser(req *t.FollowRequest) *u.ApiError {
 
 	query :=
-		`insert into following (follower_id,following_id) values($1,$2)`
+		`insert into following (follower_id,following_id,date_followed) values($1,$2,$3)`
 
 	_, err := s.db.Exec(
 		query,
 		req.UserID,
 		req.AccountID,
+		req.DateFollowed,
 	)
 
 	if err != nil {
@@ -47,7 +48,7 @@ func (s *PostgresStorage) UnFollowUser(req *t.UnFollowRequest) *u.ApiError {
 func (s *PostgresStorage) GetAccFollowingDetails(req *t.GetAccFollowingDetails) ([]*t.Account, *u.ApiError) {
 
 	query :=
-		`SELECT * FROM accounts_view WHERE id IN (SELECT follower_id FROM following WHERE following_id = $1);`
+		`SELECT * FROM accounts WHERE id IN (SELECT follower_id FROM following WHERE following_id = $1);`
 
 	row, err := s.db.Query(
 		query,
@@ -78,7 +79,7 @@ func (s *PostgresStorage) GetAccFollowingDetails(req *t.GetAccFollowingDetails) 
 func (s *PostgresStorage) GetFollowerDetails(req *t.GetFollowersDetail) ([]*t.Account, *u.ApiError) {
 
 	query :=
-		`SELECT * FROM accounts_view WHERE id IN (SELECT following_id FROM following WHERE follower_id = $1);`
+		`SELECT * FROM accounts WHERE id IN (SELECT following_id FROM following WHERE follower_id = $1);`
 
 	row, err := s.db.Query(
 		query,

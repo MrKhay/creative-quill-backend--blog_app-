@@ -14,6 +14,7 @@ import (
 type Storage interface {
 	CreateTables() *u.ApiError
 	Atuh
+	Article
 	User
 }
 
@@ -22,6 +23,17 @@ type Atuh interface {
 	GetAccount(req *t.SigninRequest) (*t.Account, *u.ApiError)
 	AltCreateAccount(acc *t.NewAccount) *u.ApiError
 	AltGetAccount(req *t.AltSigninRequest) (*t.Account, *u.ApiError)
+}
+
+type Article interface {
+	CreateArticle(req *t.NewArticleRequest) *u.ApiError
+	GetAllArticles() ([]*t.Article, *u.ApiError)
+	ModifieArticle(req *t.ModifieArticleRequest) *u.ApiError
+	DeleteArticle(req *t.DeleteArticleRequest) *u.ApiError
+	LikeArticle(req *t.Like) *u.ApiError
+	DislikeArticle(req *t.Dislike) *u.ApiError
+	UnlikeArticle(req *t.Like) *u.ApiError
+	UndislikeArticle(req *t.Dislike) *u.ApiError
 }
 
 type User interface {
@@ -88,6 +100,8 @@ func (s *PostgresStorage) CreateTables() *u.ApiError {
 	description text DEFAULT '',
 	profilepic_url text DEFAULT '',
 	headerpic_url text DEFAULT '',
+	followers int DEFAULT 0,
+	following int DEFAULT 0,
 	created_at timestamp,
     password text
     )`
@@ -97,10 +111,49 @@ func (s *PostgresStorage) CreateTables() *u.ApiError {
 	if err != nil {
 		return u.NewError(err, http.StatusConflict)
 	}
+	querey = `CREATE TABLE IF NOT EXISTS articles (
+		id uuid PRIMARY KEY,
+		author_id uuid REFERENCES accounts(id) ON DELETE CASCADE,
+		title VARCHAR(70),
+		thumbnail_url text,
+		likes int DEFAULT 0,
+		dislikes int DEFAULT 0,
+		comments int DEFAULT 0,
+		last_modified time,
+		date_created time,
+		content json)`
+
+	_, err = s.db.Exec(querey)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+	querey = `CREATE TABLE IF NOT EXISTS article_likes (
+		ID uuid PRIMARY KEY,
+		user_id uuid REFERENCES accounts(id) ON DELETE CASCADE,
+		article_id uuid REFERENCES articles(id) ON DELETE CASCADE)`
+
+	_, err = s.db.Exec(querey)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+	querey = `CREATE TABLE IF NOT EXISTS article_dislikes (
+		ID uuid PRIMARY KEY,
+		user_id uuid REFERENCES accounts(id) ON DELETE CASCADE,
+		article_id uuid REFERENCES articles(id) ON DELETE CASCADE
+		)`
+
+	_, err = s.db.Exec(querey)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
 
 	querey = `CREATE TABLE IF NOT EXISTS following (
     follower_id uuid References accounts(id) ON DELETE CASCADE,
     following_id uuid References accounts(id) ON DELETE CASCADE,
+	date_followed time,
 	PRIMARY KEY (follower_id,following_id)
     )`
 
@@ -110,19 +163,162 @@ func (s *PostgresStorage) CreateTables() *u.ApiError {
 		return u.NewError(err, http.StatusConflict)
 	}
 
-	querey = `CREATE OR REPLACE VIEW following_view AS SELECT id, (SELECT * FROM following WHERE follower_id = id) 
-	         AS acc_following_no,(SELECT COUNT(*) FROM following WHERE following_id =id) AS followers_no 
-	         FROM accounts;
-              )`
+	querey = `CREATE  OR REPLACE FUNCTION update_following_whenfollowed_func()
+	RETURNS TRIGGER AS $$
+	BEGIN
+    UPDATE accounts
+	SET followers = followers + 1
+	WHERE accounts.id = NEW.following_id;
+
+	RETURN NEW;
+	
+	END;
+	$$ LANGUAGE plpgsql;
+	
+	
+	CREATE OR REPLACE TRIGGER update_following_whenfollowed_func_trigger
+	AFTER INSERT ON following
+	FOR EACH ROW
+	EXECUTE FUNCTION update_following_whenfollowed_func();
+
+
+    CREATE  OR REPLACE FUNCTION update_followers_whenfollowed_func()
+	RETURNS TRIGGER AS $$
+	BEGIN
+    UPDATE accounts
+	SET following = following + 1
+	WHERE accounts.id = NEW.follower_id;
+
+	RETURN NEW;
+	
+	END;
+	$$ LANGUAGE plpgsql;
+	
+	
+	CREATE OR REPLACE TRIGGER  update_followers_whenfollowed_func_trigger
+	AFTER INSERT ON following
+	FOR EACH ROW
+	EXECUTE FUNCTION  update_followers_whenfollowed_func();
+			   `
 
 	_, err = s.db.Exec(querey)
 
 	if err != nil {
 		return u.NewError(err, http.StatusConflict)
 	}
-	querey = `CREATE OR REPLACE VIEW accounts_view AS SELECT a.id,a.first_name,a.last_name,a.display_name,a.user_name,
-	          a.email,a.website_url,a.description,a.profilepic_url,a.headerpic_url,a.created_at,fv.acc_following_no,
-	          fv.followers_no,a.password FROM accounts a JOIN following_view AS fv ON a.id=fv.id`
+
+	querey = `CREATE  OR REPLACE FUNCTION update_following_whenunfollowed_func()
+	RETURNS TRIGGER AS $$
+	BEGIN
+    UPDATE accounts
+	SET followers = followers - 1
+	WHERE accounts.id = OLD.following_id;
+
+	RETURN OLD;
+	
+	END;
+	$$ LANGUAGE plpgsql;
+	
+	
+	CREATE OR REPLACE TRIGGER update_following_whenunfollowed_func_trigger
+	AFTER DELETE ON following
+	FOR EACH ROW
+	EXECUTE FUNCTION update_following_whenunfollowed_func();
+
+
+    CREATE  OR REPLACE FUNCTION update_followers_whenunfollowed_func()
+	RETURNS TRIGGER AS $$
+	BEGIN
+    UPDATE accounts
+	SET following = following - 1
+	WHERE accounts.id = OLD.follower_id;
+
+	RETURN OLD;
+	
+	END;
+	$$ LANGUAGE plpgsql;
+	
+	
+	CREATE OR REPLACE TRIGGER  update_followers_whenunfollowed_func_trigger
+	AFTER DELETE ON following
+	FOR EACH ROW
+	EXECUTE FUNCTION  update_followers_whenunfollowed_func();`
+
+	_, err = s.db.Exec(querey)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+
+	querey = `CREATE OR REPLACE FUNCTION article_like_func()
+               RETURNS TRIGGER AS $$
+               BEGIN
+               UPDATE articles
+               SET likes = likes +1
+               WHERE articles.id = New.article_id;
+               RETURN NEW;
+               END;
+               $$ LANGUAGE plpgsql;
+               
+               CREATE OR REPLACE TRIGGER article_like_func_trigger
+               AFTER INSERT ON article_likes
+               FOR EACH ROW
+               EXECUTE FUNCTION article_like_func();
+			   
+			   CREATE OR REPLACE FUNCTION article_unlike_func()
+               RETURNS TRIGGER AS $$
+               BEGIN
+               UPDATE articles
+               SET likes = likes - 1
+               WHERE articles.id = OLD.article_id;
+               RETURN OLD;
+               END;
+               $$ LANGUAGE plpgsql;
+               
+               CREATE OR REPLACE TRIGGER article_unlike_func_trigger
+               AFTER DELETE ON article_likes
+               FOR EACH ROW
+               EXECUTE FUNCTION article_unlike_func();
+
+			   `
+
+	_, err = s.db.Exec(querey)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+
+	querey = `CREATE OR REPLACE FUNCTION article_dislike_func()
+               RETURNS TRIGGER AS $$
+               BEGIN
+               UPDATE articles
+               SET dislikes = dislikes +1
+               WHERE articles.id = New.article_id;
+               RETURN NEW;
+               END;
+               $$ LANGUAGE plpgsql;
+               
+               CREATE OR REPLACE TRIGGER article_dislike_func_trigger
+               AFTER INSERT ON article_dislikes
+               FOR EACH ROW
+               EXECUTE FUNCTION article_dislike_func();
+			   
+
+			   CREATE OR REPLACE FUNCTION article_undislike_func()
+               RETURNS TRIGGER AS $$
+               BEGIN
+               UPDATE articles
+               SET dislikes = dislikes -1
+               WHERE articles.id = OLD.article_id;
+               RETURN OLD;
+               END;
+               $$ LANGUAGE plpgsql;
+               
+               CREATE OR REPLACE TRIGGER article_undislike_func_trigger
+               AFTER DELETE ON article_dislikes
+               FOR EACH ROW
+               EXECUTE FUNCTION article_undislike_func();
+			   `
 
 	_, err = s.db.Exec(querey)
 
@@ -146,12 +342,33 @@ func scanIntoAccount(acc *t.Account, rows *sql.Rows) *u.ApiError {
 		&acc.Description,
 		&acc.ProfilePicUrl,
 		&acc.HeaderPicUrl,
-		&acc.CreatedAt,
 		&acc.AccFolloweringCount,
 		&acc.FollowersCount,
+		&acc.CreatedAt,
 		&acc.Password,
 	)
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
 
+	return nil
+
+}
+
+func scanIntoArtice(acc *t.Article, rows *sql.Rows) *u.ApiError {
+
+	err := rows.Scan(
+		&acc.ID,
+		&acc.AuthorID,
+		&acc.Title,
+		&acc.ThumbnailUrl,
+		&acc.Likes,
+		&acc.Dislikes,
+		&acc.Comments,
+		&acc.DateCreated,
+		&acc.LastModified,
+		&acc.Content,
+	)
 	if err != nil {
 		return u.NewError(err, http.StatusConflict)
 	}

@@ -29,6 +29,10 @@ func makeHttpHandleFunc(f apiFunc) http.HandlerFunc {
 }
 
 func SetupRoutes(app *mux.Router, h handlers.Database) {
+
+	// u - Update
+	// d - Delete
+
 	//  health
 	app.HandleFunc("/health", makeHttpHandleFunc(handlers.HealthCheckHandler))
 
@@ -52,5 +56,13 @@ func SetupRoutes(app *mux.Router, h handlers.Database) {
 	app.HandleFunc("/user/u/description", makeHttpHandleFunc(h.UpdateDescription)).Methods("PUT")
 	app.HandleFunc("/user/u/headerpic", makeHttpHandleFunc(h.UpdateHeaderPicUrl)).Methods("PUT")
 	app.HandleFunc("/user/u/account", makeHttpHandleFunc(h.UpdateHeaderPicUrl)).Methods("PUT")
+
+	// article
+	app.HandleFunc("/articles", makeHttpHandleFunc(h.GetArticle)).Methods("GET")
+	app.HandleFunc("/new/article", makeHttpHandleFunc(h.CreateNewArticle)).Methods("POST")
+	app.HandleFunc("/u/article", makeHttpHandleFunc(h.ModifieArticle)).Methods("PUT")
+	app.HandleFunc("/d/article", makeHttpHandleFunc(h.DeleteArticle)).Methods("DELETE")
+	app.HandleFunc("/like/article", makeHttpHandleFunc(h.LikeArticle)).Methods("POST")
+	app.HandleFunc("/dislike/article", makeHttpHandleFunc(h.DisLikeArticle)).Methods("POST")
 
 }

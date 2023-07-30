@@ -27,7 +27,7 @@ func (h *Database) FollowUser(w http.ResponseWriter, r *http.Request) *u.ApiErro
 		return u.NewError(fmt.Errorf("invalid"), http.StatusConflict)
 
 	}
-	error := h.db.FollowUser(req)
+	error := h.db.FollowUser(t.NewFollowRequestFunc(req))
 
 	if error != nil {
 		return error

@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type UpdateAccDetailsRequest struct {
 	UserID string `json:"user_id"`
 	Value  string `json:"value"`
@@ -19,8 +21,18 @@ type UpdateAccountReq struct {
 }
 
 type FollowRequest struct {
-	UserID    string `json:"user_id"`
-	AccountID string `json:"acc_tofollow_id"`
+	UserID       string    `json:"user_id"`
+	AccountID    string    `json:"acc_tofollow_id"`
+	DateFollowed time.Time `json:"date_followed"`
+}
+
+func NewFollowRequestFunc(req *FollowRequest) *FollowRequest {
+
+	return &FollowRequest{
+		UserID:       req.UserID,
+		AccountID:    req.AccountID,
+		DateFollowed: time.Now().UTC(),
+	}
 }
 
 type UnFollowRequest struct {
