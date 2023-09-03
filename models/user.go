@@ -31,7 +31,7 @@ func NewFollowRequestFunc(req *FollowRequest) *FollowRequest {
 	return &FollowRequest{
 		UserID:       req.UserID,
 		AccountID:    req.AccountID,
-		DateFollowed: time.Now().UTC(),
+		DateFollowed: time.Now(),
 	}
 }
 

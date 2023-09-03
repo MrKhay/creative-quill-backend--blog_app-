@@ -151,3 +151,56 @@ func (d *Database) DisLikeArticle(w http.ResponseWriter, r *http.Request) *u.Api
 	u.WriteJson(w, http.StatusCreated, Success)
 	return nil
 }
+
+func (d *Database) CreateNewArticleComment(w http.ResponseWriter, r *http.Request) *u.ApiError {
+
+	req := new(t.NewArticleCommentRequest)
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+
+	if req.ArticleID == "" || req.UserID == "" {
+
+		return u.NewError(fmt.Errorf("missing field"), http.StatusBadRequest)
+	}
+
+	req, error := t.NewArticleCommentFunc(req)
+	if err != nil {
+		return error
+	}
+
+	error = d.db.CreateArticleNewComment(req)
+
+	if error != nil {
+		return error
+	}
+
+	u.WriteJson(w, http.StatusCreated, Success)
+	return nil
+}
+
+func (d *Database) GetArticleComments(w http.ResponseWriter, r *http.Request) *u.ApiError {
+
+	req := new(t.ArticleCommentsRequest)
+
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+
+	if req.ArticleID == "" {
+
+		return u.NewError(fmt.Errorf("missing field"), http.StatusBadRequest)
+	}
+
+	res, error := d.db.GetArticleComments(req)
+
+	if error != nil {
+		return error
+	}
+
+	u.WriteJson(w, http.StatusCreated, res)
+	return nil
+}

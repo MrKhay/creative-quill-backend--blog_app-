@@ -9,6 +9,12 @@ import (
 	u "github.com/mrkhay/creative-quill-backend/utility"
 )
 
+type ArticleCommentsRequest struct {
+	ArticleID string `json:"article_id"`
+}
+type GetArticleCommentsRequest struct {
+	ArticleID string `json:"article_id"`
+}
 type NewArticleRequest struct {
 	ID           uuid.UUID       `json:"id"`
 	AuthorID     string          `json:"author_id"`
@@ -55,8 +61,8 @@ func NewArticle(authorid, title, thumbnail_url string, content json.RawMessage) 
 		AuthorID:     authorid,
 		Title:        title,
 		ThumbnailUrl: thumbnail_url,
-		LastModified: time.Now().UTC(),
-		DateCreated:  time.Now().UTC(),
+		LastModified: time.Now(),
+		DateCreated:  time.Now(),
 		Content:      content,
 	}, nil
 }
@@ -67,7 +73,7 @@ func ModifieArticleFunc(article *ModifieArticleRequest) *ModifieArticleRequest {
 		AuthorID:     article.AuthorID,
 		Title:        article.Title,
 		ThumbnailUrl: article.ThumbnailUrl,
-		LastModified: time.Now().UTC(),
+		LastModified: time.Now(),
 		Content:      article.Content,
 	}
 }

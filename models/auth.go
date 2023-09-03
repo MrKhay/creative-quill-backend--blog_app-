@@ -81,7 +81,7 @@ func NewAltAccount(firstname, lastname, emailadr string) (*Account, *u.ApiError)
 		Firstname: firstname,
 		Lastname:  lastname,
 		Email:     emailadr,
-		CreatedAt: time.Now().UTC(),
+		CreatedAt: time.Now(),
 	}, nil
 
 }

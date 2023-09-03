@@ -182,35 +182,13 @@ func (s *PostgresStorage) DeleteArticle(req *t.DeleteArticleRequest) *u.ApiError
 	return nil
 }
 
-func (s *PostgresStorage) deleteCommentFromArticle(req *t.DeleteCommentRequest) *u.ApiError {
-
-	query := `DELETE FROM comments WHERE () `
-
-	_, err := s.db.Exec(query,
-		req.ID,
-		req.AuthorID,
-		req.ArticleID,
-	)
-
-	if err != nil {
-		return u.NewError(err, http.StatusConflict)
-	}
-	return nil
-}
-
 func (s *PostgresStorage) LikeArticle(req *t.Like) *u.ApiError {
 
 	ch := make(chan *u.ApiError)
 
 	go func() {
 
-		_, err := s.db.Query(`DELETE FROM article_dislikes WHERE article_id = $1 AND user_id = $2`, req.ContentID, req.UserID)
-
-		if err != nil {
-			ch <- u.NewError(err, http.StatusConflict)
-		}
-
-		ch <- nil
+		ch <- s.UnlikeArticle(req)
 	}()
 
 	res := <-ch
@@ -240,13 +218,7 @@ func (s *PostgresStorage) DislikeArticle(req *t.Dislike) *u.ApiError {
 
 	go func() {
 
-		_, err := s.db.Query(`DELETE FROM article_likes WHERE article_id = $1 AND user_id = $2`, req.ContentID, req.UserID)
-
-		if err != nil {
-			ch <- u.NewError(err, http.StatusConflict)
-		}
-
-		ch <- nil
+		ch <- s.UndislikeArticle(req)
 	}()
 
 	res := <-ch
@@ -290,4 +262,54 @@ func (s *PostgresStorage) UndislikeArticle(req *t.Dislike) *u.ApiError {
 	}
 
 	return nil
+}
+
+func (s *PostgresStorage) CreateArticleNewComment(req *t.NewArticleCommentRequest) *u.ApiError {
+
+	query := `INSERT INTO article_comments (id,user_id,article_id,date_created,content)
+	values($1,$2,$3,$4,$5)`
+
+	_, err := s.db.Exec(query,
+		req.ID,
+		req.UserID,
+		req.ArticleID,
+		req.DateCreated,
+		req.Content,
+	)
+
+	if err != nil {
+		return u.NewError(err, http.StatusConflict)
+	}
+	return nil
+}
+
+func (s *PostgresStorage) GetArticleComments(req *t.ArticleCommentsRequest) ([]*t.Comment, *u.ApiError) {
+
+	query :=
+		`SELECT * FROM article_comments WHERE article_id = $1 AND parent_comment_id IS NULL`
+
+	row, err := s.db.Query(
+		query,
+		req.ArticleID,
+	)
+	comments := []*t.Comment{}
+
+	for row.Next() {
+
+		comment := new(t.Comment)
+
+		err := scanIntoComment(comment, row)
+
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	if err != nil {
+		return nil, u.NewError(err, http.StatusConflict)
+	}
+
+	return comments, nil
+
 }

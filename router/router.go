@@ -30,8 +30,8 @@ func makeHttpHandleFunc(f apiFunc) http.HandlerFunc {
 
 func SetupRoutes(app *mux.Router, h handlers.Database) {
 
-	// u - Update
-	// d - Delete
+	/// u - Update
+	/// d - Delete
 
 	//  health
 	app.HandleFunc("/health", makeHttpHandleFunc(handlers.HealthCheckHandler))
@@ -64,5 +64,14 @@ func SetupRoutes(app *mux.Router, h handlers.Database) {
 	app.HandleFunc("/d/article", makeHttpHandleFunc(h.DeleteArticle)).Methods("DELETE")
 	app.HandleFunc("/like/article", makeHttpHandleFunc(h.LikeArticle)).Methods("POST")
 	app.HandleFunc("/dislike/article", makeHttpHandleFunc(h.DisLikeArticle)).Methods("POST")
+	app.HandleFunc("/article/comments", makeHttpHandleFunc(h.GetArticleComments)).Methods("GET")
+
+	// comment
+	app.HandleFunc("/new/comment", makeHttpHandleFunc(h.CreateNewArticleComment)).Methods("POST")
+	app.HandleFunc("/d/comment", makeHttpHandleFunc(h.DeleteComment)).Methods("DELETE")
+	app.HandleFunc("/like/comment", makeHttpHandleFunc(h.LikeComment)).Methods("POST")
+	app.HandleFunc("/dislike/comment", makeHttpHandleFunc(h.DislikeComment)).Methods("POST")
+	app.HandleFunc("/sub/comment", makeHttpHandleFunc(h.CreateNewArticleSubComment)).Methods("POST")
+	app.HandleFunc("/sub/comment", makeHttpHandleFunc(h.GetCommentSubComments)).Methods("GET")
 
 }
